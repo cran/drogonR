@@ -1,0 +1,10 @@
+# drogonR-shim text  2026-05-04T15:31:19+03:00
+# wrk -t4 -c50 -d30s http://127.0.0.1:8083/ping-text
+Running 30s test @ http://127.0.0.1:8083/ping-text
+  4 threads and 50 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   643.97us    1.60ms  46.54ms   99.15%
+    Req/Sec    22.45k     2.40k   26.65k    64.62%
+  2689988 requests in 30.10s, 348.89MB read
+Requests/sec:  89369.51
+Transfer/sec:     11.59MB

@@ -1,0 +1,10 @@
+# drogonR-native text  2026-05-04T15:30:19+03:00
+# wrk -t4 -c50 -d30s http://127.0.0.1:8080/ping-text
+Running 30s test @ http://127.0.0.1:8080/ping-text
+  4 threads and 50 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   264.34us  677.07us  29.93ms   98.68%
+    Req/Sec    52.03k     4.32k   71.80k    71.08%
+  6212039 requests in 30.00s, 835.32MB read
+Requests/sec: 207046.37
+Transfer/sec:     27.84MB

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Rate limiting</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Rate limiting</h1>
+
+
+
+<p><code>dr_rate_limit()</code> adds a per-route or per-app cap on how
+many requests are allowed in a rolling time window. Over-budget requests
+are rejected with HTTP <code>429 Too Many Requests</code> and a
+<code>Retry-After</code> header, <strong>before</strong> the request is
+dispatched to R — so a flood of clients can’t saturate the dispatcher or
+your handler.</p>
+<div id="quick-start" class="section level2">
+<h2>Quick start</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(drogonR)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>app <span class="ot">&lt;-</span> <span class="fu">dr_app</span>() <span class="sc">|&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="fu">dr_get</span>(<span class="st">&quot;/health&quot;</span>,      <span class="cf">function</span>(req) <span class="st">&quot;ok&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="fu">dr_get</span>(<span class="st">&quot;/api/users&quot;</span>,   <span class="cf">function</span>(req) <span class="st">&quot;users&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="co"># 100 requests per 60 s, applied to every route under /api/</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="fu">dr_rate_limit</span>(<span class="at">capacity =</span> <span class="dv">100</span><span class="dt">L</span>, <span class="at">window =</span> <span class="dv">60</span>, <span class="at">routes =</span> <span class="st">&quot;/api/&quot;</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">dr_serve</span>(app, <span class="at">port =</span> <span class="dv">8080</span><span class="dt">L</span>)</span></code></pre></div>
+<p><code>/health</code> is unaffected (it is outside the
+<code>/api/</code> prefix). <code>/api/users</code> is allowed up to 100
+hits per 60 s; subsequent hits get 429 until the window slides
+forward.</p>
+</div>
+<div id="how-it-works" class="section level2">
+<h2>How it works</h2>
+<p>The check runs on Drogon’s I/O thread, immediately after route
+matching and <strong>before</strong> the request enters the R-side
+dispatch pipeline. That means:</p>
+<ul>
+<li>No queueing cost when over the limit — the 429 is built and sent
+from C++.</li>
+<li>R-side [dr_use()] middleware does <strong>not</strong> run for
+rejected requests. Conversely, allowed requests pass through middleware
+as normal.</li>
+<li>Native ([dr_get_cpp()]) and streaming-native ([dr_get_cpp_stream()])
+routes are limited too — the gate is in front of the worker pool
+hand-off.</li>
+<li>Static mounts ([dr_static()]) are <em>not</em> gated by
+<code>dr_rate_limit()</code> in the current release; throttle them with
+a reverse proxy.</li>
+</ul>
+<p>The <code>Retry-After</code> header carries the rule’s
+<code>window</code> (rounded up to seconds) — a conservative upper bound
+on how long the client should back off.</p>
+</div>
+<div id="algorithms-type" class="section level2">
+<h2>Algorithms (<code>type =</code>)</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">dr_rate_limit</span>(app, <span class="at">capacity =</span> <span class="dv">10</span><span class="dt">L</span>, <span class="at">window =</span> <span class="dv">1</span>, <span class="at">type =</span> <span class="st">&quot;sliding_window&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">dr_rate_limit</span>(app, <span class="at">capacity =</span> <span class="dv">10</span><span class="dt">L</span>, <span class="at">window =</span> <span class="dv">1</span>, <span class="at">type =</span> <span class="st">&quot;fixed_window&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">dr_rate_limit</span>(app, <span class="at">capacity =</span> <span class="dv">10</span><span class="dt">L</span>, <span class="at">window =</span> <span class="dv">1</span>, <span class="at">type =</span> <span class="st">&quot;token_bucket&quot;</span>)</span></code></pre></div>
+<ul>
+<li><strong><code>&quot;sliding_window&quot;</code></strong> (default) — counts
+requests in the trailing <code>window</code> seconds. Smooth: no
+clock-edge bursts, but slightly more bookkeeping than a fixed
+window.</li>
+<li><strong><code>&quot;fixed_window&quot;</code></strong> — <code>capacity</code>
+per fixed wall-clock interval of <code>window</code> seconds. Cheapest,
+but allows a burst of <code>2 * capacity</code> across a window
+boundary.</li>
+<li><strong><code>&quot;token_bucket&quot;</code></strong> — refills at
+<code>capacity / window</code> tokens per second, with
+<code>capacity</code> being the maximum burst. Use this when steady
+throughput matters more than tight per-window limits.</li>
+</ul>
+<p>All three are implemented by Drogon’s <code>RateLimiter</code> class;
+drogonR just wraps each instance in a small mutex so the I/O threads can
+call <code>isAllowed()</code> concurrently without racing.</p>
+</div>
+<div id="scope-scope" class="section level2">
+<h2>Scope (<code>scope =</code>)</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">dr_rate_limit</span>(app, <span class="at">capacity =</span> <span class="dv">10</span><span class="dt">L</span>, <span class="at">window =</span> <span class="dv">1</span>, <span class="at">routes =</span> <span class="st">&quot;/api/&quot;</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>              <span class="at">scope =</span> <span class="st">&quot;per_route&quot;</span>)   <span class="co"># default</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="fu">dr_rate_limit</span>(app, <span class="at">capacity =</span> <span class="dv">10</span><span class="dt">L</span>, <span class="at">window =</span> <span class="dv">1</span>, <span class="at">routes =</span> <span class="st">&quot;/api/&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>              <span class="at">scope =</span> <span class="st">&quot;global&quot;</span>)</span></code></pre></div>
+<ul>
+<li><strong><code>&quot;per_route&quot;</code></strong> — each matched route gets
+its own bucket. <code>/api/a</code> and <code>/api/b</code> are
+throttled independently.</li>
+<li><strong><code>&quot;global&quot;</code></strong> — one bucket shared across
+every matched route. 10 hits to <code>/api/a</code> plus 0 hits to
+<code>/api/b</code> already exhausts the bucket; both routes start
+returning 429 until the window opens up.</li>
+</ul>
+<p>A route may match several rules at once (<code>dr_rate_limit()</code>
+is additive). To pass through, the request must satisfy
+<strong>every</strong> matching rule.</p>
+</div>
+<div id="prefix-matching-routes" class="section level2">
+<h2>Prefix matching (<code>routes =</code>)</h2>
+<p><code>routes</code> is a character vector of path
+<strong>prefixes</strong>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># all of /api/ AND /admin/, with separate budgets per route</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">dr_rate_limit</span>(app, <span class="at">capacity =</span> <span class="dv">100</span><span class="dt">L</span>, <span class="at">window =</span> <span class="dv">60</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>              <span class="at">routes =</span> <span class="fu">c</span>(<span class="st">&quot;/api/&quot;</span>, <span class="st">&quot;/admin/&quot;</span>))</span></code></pre></div>
+<p><code>NULL</code> (the default) matches every registered route —
+useful for an app-wide cap layered on top of per-area rules.</p>
+</div>
+<div id="per-ip-limiting" class="section level2">
+<h2>Per-IP limiting</h2>
+<p>Not provided by <code>dr_rate_limit()</code>. The bucket is shared
+across all clients of the matched routes; if you need a per-client cap,
+do it in front of drogonR (nginx <code>limit_req</code>, Caddy
+<code>rate_limit</code>, Cloudflare, an API gateway, etc.). Doing per-IP
+enforcement at the application layer would require maintaining a hash
+table of clients keyed by source IP and pruning it under contention — a
+lot of overhead for something a reverse proxy already does well.</p>
+</div>
+<div id="operational-notes" class="section level2">
+<h2>Operational notes</h2>
+<ul>
+<li>Rules are frozen at <code>dr_serve()</code> time. Add all
+<code>dr_rate_limit()</code> calls before starting the server; they
+cannot be modified live.</li>
+<li>Call <code>dr_rate_limit()</code> <strong>after</strong> registering
+routes so prefix matches resolve correctly.</li>
+<li>The Drogon event loop cannot be restarted in the same R session, so
+changing rate-limit rules means restarting the R session.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

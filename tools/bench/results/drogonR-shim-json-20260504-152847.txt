@@ -1,0 +1,10 @@
+# drogonR-shim json  2026-05-04T15:30:49+03:00
+# wrk -t4 -c50 -d30s http://127.0.0.1:8083/ping
+Running 30s test @ http://127.0.0.1:8083/ping
+  4 threads and 50 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   690.93us    1.77ms  47.14ms   99.17%
+    Req/Sec    21.20k     2.17k   25.75k    68.67%
+  2531101 requests in 30.00s, 347.59MB read
+Requests/sec:  84366.89
+Transfer/sec:     11.59MB

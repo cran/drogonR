@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Variant 2 — drogonR Native API (dr_app / dr_get / …)</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Variant 2 — drogonR Native API
+(<code>dr_app</code> / <code>dr_get</code> / …)</h1>
+
+
+
+<p>The native API is what you use when you’re writing a new HTTP service
+in R and want full control over routes, request parsing, response shape,
+and middleware. Each request runs an R closure on the main R thread; the
+I/O loop, parsing, and connection management stay in C++.</p>
+<p>For the overall picture see
+<code>vignette(&quot;drogonR&quot;, package = &quot;drogonR&quot;)</code>.</p>
+<hr />
+<div id="building-an-app" class="section level2">
+<h2>Building an app</h2>
+<p><code>dr_app()</code> returns a fresh <code>drogon_app</code> (a
+mutable environment). Routes are added with <code>dr_get()</code> /
+<code>dr_post()</code> / <code>dr_put()</code> /
+<code>dr_delete()</code>; each takes the app, a path pattern, and a
+handler. The helpers return the app, so they pipe.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(drogonR)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>app <span class="ot">&lt;-</span> <span class="fu">dr_app</span>() <span class="sc">|&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="fu">dr_get</span>   (<span class="st">&quot;/health&quot;</span>,                <span class="cf">function</span>(req) <span class="st">&quot;ok&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="fu">dr_get</span>   (<span class="st">&quot;/users/:id&quot;</span>,             <span class="cf">function</span>(req) {</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>    <span class="fu">dr_json</span>(<span class="fu">list</span>(<span class="at">id =</span> req<span class="sc">$</span>params[[<span class="st">&quot;id&quot;</span>]]))</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="fu">dr_post</span>  (<span class="st">&quot;/users&quot;</span>,                 <span class="cf">function</span>(req) {</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>    body <span class="ot">&lt;-</span> <span class="fu">dr_body</span>(req, <span class="at">as =</span> <span class="st">&quot;json&quot;</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>    <span class="fu">dr_json</span>(<span class="fu">list</span>(<span class="at">created =</span> body<span class="sc">$</span>name), <span class="at">status =</span> <span class="dv">201</span><span class="dt">L</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  <span class="fu">dr_delete</span>(<span class="st">&quot;/users/:id&quot;</span>,             <span class="cf">function</span>(req) {</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>    <span class="fu">dr_response</span>(<span class="at">status =</span> <span class="dv">204</span><span class="dt">L</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  })</span></code></pre></div>
+<p>Path placeholders accept three syntaxes — <code>:id</code>,
+<code>&lt;id&gt;</code>, <code>{id}</code> — all interchangeable.
+Captured values arrive in <code>req$params</code> keyed by name.
+Duplicate <code>(method, path)</code> registrations warn and overwrite
+the previous handler.</p>
+<hr />
+</div>
+<div id="the-req-object" class="section level2">
+<h2>The <code>req</code> object</h2>
+<p>A handler is called with one argument: a <code>drogon_request</code>.
+It exposes fields directly and via small accessor helpers.</p>
+<table>
+<colgroup>
+<col width="18%" />
+<col width="21%" />
+<col width="59%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>req$method</code></td>
+<td>character(1)</td>
+<td><code>&quot;GET&quot;</code> / <code>&quot;POST&quot;</code> / …</td>
+</tr>
+<tr class="even">
+<td><code>req$path</code></td>
+<td>character(1)</td>
+<td>URL path with no query string</td>
+</tr>
+<tr class="odd">
+<td><code>req$body</code></td>
+<td>character(1)</td>
+<td>raw body as text (UTF-8); use <code>dr_body()</code> to decode</td>
+</tr>
+<tr class="even">
+<td><code>req$headers</code></td>
+<td>named character</td>
+<td>Drogon <strong>lowercases</strong> names</td>
+</tr>
+<tr class="odd">
+<td><code>req$query</code></td>
+<td>named character</td>
+<td>URL-decoded</td>
+</tr>
+<tr class="even">
+<td><code>req$params</code></td>
+<td>named list</td>
+<td>path placeholder captures</td>
+</tr>
+</tbody>
+</table>
+<p>Helpers:</p>
+<ul>
+<li><code>dr_header(req, &quot;Content-Type&quot;)</code> — case-insensitive
+header lookup (returns <code>NULL</code> if absent).</li>
+<li><code>dr_query(req)</code> — full named character vector; or
+<code>dr_query(req,   &quot;page&quot;)</code> to pull one value
+(<code>NULL</code> if absent).</li>
+<li><code>dr_body(req, as = &quot;text&quot; | &quot;json&quot; | &quot;raw&quot;)</code> —
+<code>&quot;json&quot;</code> parses with <code>jsonlite::fromJSON()</code>;
+<code>&quot;raw&quot;</code> returns a raw vector.</li>
+</ul>
+<hr />
+</div>
+<div id="building-responses" class="section level2">
+<h2>Building responses</h2>
+<p>A handler may return:</p>
+<ul>
+<li>a <strong>bare string</strong> — sent as
+<code>text/plain; charset=utf-8</code>, status 200;</li>
+<li>a <strong><code>dr_response()</code> list</strong> — full control
+over status, body, headers;</li>
+<li>one of the response helpers — convenience wrappers around
+<code>dr_response()</code>.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Plain text — the bare-string shorthand.</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="cf">function</span>(req) <span class="st">&quot;pong&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co"># JSON. auto_unbox = TRUE turns length-1 R vectors into JSON scalars</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co"># (so list(ok = TRUE) emits {&quot;ok&quot;:true}, not {&quot;ok&quot;:[true]}).</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="cf">function</span>(req) <span class="fu">dr_json</span>(<span class="fu">list</span>(<span class="at">ok =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co"># Explicit status / headers.</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="cf">function</span>(req) <span class="fu">dr_response</span>(</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">body    =</span> <span class="st">&#39;{&quot;reason&quot;:&quot;gone&quot;}&#39;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">status  =</span> <span class="dv">410</span><span class="dt">L</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">headers =</span> <span class="fu">list</span>(<span class="st">&quot;Content-Type&quot;</span> <span class="ot">=</span> <span class="st">&quot;application/json&quot;</span>))</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co"># Other helpers:</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#   dr_text(...)      — status / custom text headers</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#   dr_html(...)      — text/html</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#   dr_redirect(loc)  — 302 with a Location header</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#   dr_file(path)     — stream a file with auto content-type</span></span></code></pre></div>
+<p>Throwing an R error from a handler is allowed: the bridge catches it
+and returns a 500 with a generic body. To customise that body — log the
+error, render a JSON error envelope, etc. — register an error
+handler:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>app <span class="ot">&lt;-</span> <span class="fu">dr_app</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">dr_on_error</span>(<span class="cf">function</span>(req, err) {</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>    <span class="fu">dr_json</span>(<span class="fu">list</span>(<span class="at">error =</span> <span class="fu">conditionMessage</span>(err),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>                 <span class="at">path  =</span> req<span class="sc">$</span>path),</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>            <span class="at">status =</span> <span class="dv">500</span><span class="dt">L</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  }) <span class="sc">|&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="fu">dr_get</span>(<span class="st">&quot;/risky&quot;</span>, <span class="cf">function</span>(req) <span class="fu">stop</span>(<span class="st">&quot;nope&quot;</span>))</span></code></pre></div>
+<hr />
+</div>
+<div id="middleware" class="section level2">
+<h2>Middleware</h2>
+<p><code>dr_use(app, mw)</code> appends a middleware to a chain that
+runs in registration order before the matched route handler. Each
+middleware takes <code>(req, nxt)</code>: call <code>nxt()</code> to
+delegate downstream (its return value is the response from the next
+link), or return your own response to short-circuit.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>log_requests <span class="ot">&lt;-</span> <span class="cf">function</span>(req, nxt) {</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  t0  <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  res <span class="ot">&lt;-</span> <span class="fu">nxt</span>()</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="fu">message</span>(<span class="fu">sprintf</span>(<span class="st">&quot;%s %s -&gt; %s in %s&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>                  req<span class="sc">$</span>method, req<span class="sc">$</span>path, res<span class="sc">$</span>status,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>                  <span class="fu">format</span>(<span class="fu">Sys.time</span>() <span class="sc">-</span> t0)))</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  res</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>}</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>require_auth <span class="ot">&lt;-</span> <span class="cf">function</span>(req, nxt) {</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">identical</span>(<span class="fu">dr_header</span>(req, <span class="st">&quot;X-Token&quot;</span>), <span class="fu">Sys.getenv</span>(<span class="st">&quot;APP_TOKEN&quot;</span>))) {</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">dr_response</span>(<span class="at">status =</span> <span class="dv">401</span><span class="dt">L</span>, <span class="at">body =</span> <span class="st">&quot;unauthorized&quot;</span>))</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  }</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="fu">nxt</span>()</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>}</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>app <span class="ot">&lt;-</span> <span class="fu">dr_app</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>  <span class="fu">dr_use</span>(log_requests) <span class="sc">|&gt;</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  <span class="fu">dr_use</span>(require_auth) <span class="sc">|&gt;</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>  <span class="fu">dr_get</span>(<span class="st">&quot;/secret&quot;</span>, <span class="cf">function</span>(req) <span class="st">&quot;shh&quot;</span>)</span></code></pre></div>
+<p><code>nxt()</code>’s return is always normalised to a list with
+<code>status</code>, <code>body</code>, <code>headers</code>, so
+middleware can mutate it
+(e.g. <code>res$headers[[&quot;X-Tag&quot;]] &lt;- &quot;y&quot;; res</code>) without
+checking shape.</p>
+<hr />
+</div>
+<div id="static-files" class="section level2">
+<h2>Static files</h2>
+<p><code>dr_static(app, mount, dir)</code> mounts a directory. Files
+under it are streamed by Drogon directly from a C++ I/O thread — R is
+never invoked, <code>Range</code> requests work, content-types are
+auto-detected, and path traversal (<code>..</code>, absolute paths) is
+rejected with 403.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>app <span class="ot">&lt;-</span> <span class="fu">dr_app</span>() <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">dr_static</span>(<span class="st">&quot;/assets&quot;</span>, <span class="st">&quot;./public&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">dr_get</span>   (<span class="st">&quot;/api/ping&quot;</span>, <span class="cf">function</span>(req) <span class="st">&quot;pong&quot;</span>)</span></code></pre></div>
+<hr />
+</div>
+<div id="starting-and-stopping-the-server" class="section level2">
+<h2>Starting and stopping the server</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">dr_serve</span>(app,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>         <span class="at">port    =</span> <span class="dv">8080</span><span class="dt">L</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>         <span class="at">threads =</span> <span class="dv">4</span><span class="dt">L</span>,        <span class="co"># I/O worker threads inside Drogon</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>         <span class="at">workers =</span> <span class="dv">1</span><span class="dt">L</span>)        <span class="co"># forked R worker processes; 1 = in-process</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co"># Drive later&#39;s loop on the main thread so handlers actually fire.</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="cf">repeat</span> later<span class="sc">::</span><span class="fu">run_now</span>(<span class="at">timeoutSecs =</span> <span class="dv">3600</span>)</span></code></pre></div>
+<p><code>dr_serve()</code> returns immediately after Drogon’s I/O
+threads start. The <code>later::run_now()</code> loop is what dispatches
+queued requests onto the main R thread; without it, requests pile up and
+never run. To stop from another R session: <code>dr_stop()</code>.</p>
+<p>A few rules:</p>
+<ul>
+<li><strong>One server per R session.</strong> <code>dr_serve()</code>
+after <code>dr_stop()</code> errors; Drogon’s event loop can’t be
+restarted in the same process.</li>
+<li><strong><code>workers &gt; 1</code></strong> spawns forked R worker
+processes that share the listening socket via <code>SO_REUSEPORT</code>.
+The supervising R session becomes a watchdog; you still poll
+<code>later::run_now()</code> on workers.</li>
+<li><strong><code>dr_status()</code> /
+<code>dr_running()</code></strong> report current state.</li>
+</ul>
+<hr />
+</div>
+<div id="when-to-reach-for-the-other-variants" class="section level2">
+<h2>When to reach for the other variants</h2>
+<ul>
+<li>If your work is already in C/C++ and you can write a handler
+matching <code>drogonR.h</code>, register it with
+<code>dr_get_cpp()</code> and skip the R-thread hop — see
+<code>vignette(&quot;mode-cpp-shared&quot;, package = &quot;drogonR&quot;)</code>.</li>
+<li>If you have an existing plumber app and just want it faster, swap
+one line — see
+<code>vignette(&quot;mode-plumber-shim&quot;, package = &quot;drogonR&quot;)</code>.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

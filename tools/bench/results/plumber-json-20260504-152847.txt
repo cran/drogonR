@@ -1,0 +1,10 @@
+# plumber json  2026-05-04T15:31:49+03:00
+# wrk -t4 -c50 -d30s http://127.0.0.1:8081/ping
+Running 30s test @ http://127.0.0.1:8081/ping
+  4 threads and 50 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    47.35ms    6.76ms  98.07ms   87.06%
+    Req/Sec   254.26     38.88   363.00     77.08%
+  30400 requests in 30.02s, 3.51MB read
+Requests/sec:   1012.59
+Transfer/sec:    119.82KB

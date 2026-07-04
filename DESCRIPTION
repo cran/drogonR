@@ -1,7 +1,7 @@
 Package: drogonR
 Type: Package
 Title: High-Performance HTTP Server for R via 'Drogon'
-Version: 0.1.6
+Version: 0.1.8
 Authors@R: c(
     person("Yuri", "Baramykov",
         email = "lbsbmsu@mail.ru",
@@ -25,11 +25,13 @@ Description: Provides an 'R' interface to the 'Drogon' high-performance
     'C++' 'HTTP' server framework
     (<https://github.com/drogonframework/drogon>). Offers a 'plumber'-style
     application programming interface for building 'REST' services from
-    'R' with substantially higher throughput.
+    'R' with substantially higher throughput, including streaming
+    responses and full-duplex 'WebSocket' endpoints.
 Depends: R (>= 4.1.0)
 Imports: jsonlite, processx, later (>= 1.4.4)
 LinkingTo: later
-Suggests: testthat (>= 3.0.0), httr2, curl, plumber, knitr, rmarkdown
+Suggests: testthat (>= 3.0.0), httr2, curl, websocket, plumber, knitr,
+        rmarkdown
 VignetteBuilder: knitr
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -39,7 +41,7 @@ RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 URL: https://github.com/Zabis13/drogonR
 BugReports: https://github.com/Zabis13/drogonR/issues
-Packaged: 2026-05-09 13:18:54 UTC; yuri
+Packaged: 2026-07-04 18:02:05 UTC; yuri
 Author: Yuri Baramykov [aut, cre] (ORCID:
     <https://orcid.org/0009-0000-7627-4217>),
   An Tao [ctb, cph] (Author of the bundled Drogon and Trantor C++
@@ -57,4 +59,4 @@ Author: Yuri Baramykov [aut, cre] (ORCID:
     library; see src/mman-win32/LICENSE)
 Maintainer: Yuri Baramykov <lbsbmsu@mail.ru>
 Repository: CRAN
-Date/Publication: 2026-05-13 08:20:02 UTC
+Date/Publication: 2026-07-04 19:50:02 UTC

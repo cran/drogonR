@@ -1,0 +1,2 @@
+# plumber text  2026-07-04T18:53:23+03:00
+# wrk -t4 -c50 -d30s http://127.0.0.1:8081/ping-text

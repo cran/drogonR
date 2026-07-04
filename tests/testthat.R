@@ -17,7 +17,13 @@ heavy <- c(
   "stream-cancel",
   "stream-edge",
   "cpp-stream-routes",
-  "rate-limit"
+  "rate-limit",
+  "ws-happy",
+  "ws-routes",
+  "ws-room",
+  "ws-cpp",
+  "ws-batching",
+  "ws-client"
 )
 
 on_cran <- !identical(Sys.getenv("NOT_CRAN"), "true")
@@ -35,7 +41,9 @@ if (on_cran) {
   if (length(light_tests) == 0) {
     test_check("drogonR")
   } else {
-    filter_regex <- paste(light_tests, collapse = "|")
+    # Anchor each name so a light filter can't match a heavy file as a
+    # substring (e.g. "plumber-shim" must not select "plumber-shim-server").
+    filter_regex <- paste0("^(", paste(light_tests, collapse = "|"), ")$")
     test_check("drogonR", filter = filter_regex)
   }
 } else {

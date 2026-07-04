@@ -1,0 +1,10 @@
+# drogonR-cpp json  2026-07-04T18:49:53+03:00
+# wrk -t4 -c50 -d30s http://127.0.0.1:8082/ping
+Running 30s test @ http://127.0.0.1:8082/ping
+  4 threads and 50 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   210.62us  102.59us   4.61ms   75.92%
+    Req/Sec    56.68k     3.16k   66.77k    68.27%
+  6791175 requests in 30.10s, 0.90GB read
+Requests/sec: 225622.09
+Transfer/sec:     30.55MB

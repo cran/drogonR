@@ -139,7 +139,7 @@ drogon::HttpResponsePtr buildResponse(SEXP r_value) {
     }
 
     if (s_headers != R_NilValue && TYPEOF(s_headers) == VECSXP) {
-        SEXP hnames = Rf_getAttrib(s_headers, R_NamesSymbol);
+        SEXP hnames = PROTECT(Rf_getAttrib(s_headers, R_NamesSymbol));  // drogonR patch: protect across allocating Drogon setters (rchk)
         if (TYPEOF(hnames) == STRSXP) {
             int hn = LENGTH(s_headers);
             for (int i = 0; i < hn; ++i) {
@@ -156,6 +156,7 @@ drogon::HttpResponsePtr buildResponse(SEXP r_value) {
                 }
             }
         }
+        UNPROTECT(1);  // drogonR patch: hnames
     }
 
     return resp;
@@ -393,6 +394,13 @@ static void runDispatcher(int * /*event_flags*/, void * /*data*/) {
             pr.respond(resp);
         } catch (...) { /* Drogon callback should not throw, but be safe */ }
     }
+
+    // WebSocket events ride the same wakeup pipe as HTTP requests, so
+    // drain them here on the main R thread too — first inbound server-WS
+    // events, then outbound WS-client events. Both are harmless no-ops
+    // when their subsystem is idle.
+    drainWsEvents();
+    drainWsClientEvents();
 
     // Re-arm. We're already running on the main R thread inside a later
     // callback, so g_later_fd is guaranteed non-NULL here — no extra guard.
